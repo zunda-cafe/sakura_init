@@ -18,9 +18,9 @@ $ git clone https://github.com/zunda-cafe/sakura_init.git
 
 ### 資材の編集
 
-#### hosts_sakura_init（初期設定用ホスト情報）
+★箇所を変更
 
-以下の★箇所を変更する
+#### hosts_sakura_init（初期設定用ホスト情報）
 
 ```
 [sakura_init]
@@ -66,6 +66,8 @@ ansible_become_pass=ansibleユーザのパスワード★
   - name: ping で疎通確認
 ：（中略）
 ````
+
+※ 上記「パスワード(hash化)」は passwd_hash.txt に記載のコマンドを実行して取得した文字列を使用すること。
 
 #### undo_init.yml（戻し手順ファイル）
 
