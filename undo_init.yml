@@ -8,6 +8,7 @@
       - { name: bar }
       - { name: baz }
     ssh_port: 22
+    before_ssh_port: 変更後のSSHポート番号★
   tasks:
   - name: ping で疎通確認
     ping:
@@ -18,6 +19,9 @@
       remove=yes
       name="{{ item.name }}"
     with_items: "{{ users }}"
+
+  - name: オリジナル ssh ポート番号閉塞解除
+    firewalld: service=ssh permanent=true state=enabled immediate=yes
 
   - name: wheelグループからsudo権限を削除する
     lineinfile:
@@ -36,26 +40,23 @@
       backrefs: yes
       validate: "sshd -T -f %s"
       backup: yes
-    notify:
-      - restart sshd
 
   - name: ssh ポート番号の復元
     lineinfile:
       dest: /etc/ssh/sshd_config
-      state: present
-      insertafter: "^#Port 22"
+      state: absent
       regexp: "^Port"
-      line: "Port {{ ssh_port }}"
       validate: "sshd -T -f %s"
       backup: yes
-    notify:
-      - restart sshd
+
+  - name: sshd サービス再起動
+    service: name=sshd state=restarted
+
+  - name: Ansible で接続するための ssh ポート番号変数変更
+    set_fact: ansible_ssh_port={{ ssh_port }}
 
   - name: iptables の ssh ポート削除
-    firewalld: port={{ ssh_port }}/tcp permanent=true state=disabled immediate=yes
-
-  - name: オリジナル ssh ポート番号閉塞解除
-    firewalld: service=ssh permanent=true state=enabled immediate=yes
+    firewalld: port={{ before_ssh_port }}/tcp permanent=true state=disabled immediate=yes
 
   handlers:
     - name: restart sshd

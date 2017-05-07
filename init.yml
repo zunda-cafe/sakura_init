@@ -2,15 +2,15 @@
 - hosts: sakura_init
   become: yes
   vars:
-    password: "追加ユーザのパスワード(hash化)"
+    password: "ansibleユーザのパスワード★"
     users:
       - { name: ansible,  password: "{{ password }}" }
       - { name: foo,  password: "{{ password }}" }
       - { name: bar,  password: "{{ password }}" }
       - { name: baz,  password: "{{ password }}" }
-    ssh_port: 変更後のSSHポート番号
+    ssh_port: 変更後のSSHポート番号★
     after_ansible_user: ansible
-    after_ansible_ssh_pass:ansibleユーザのパスワード 
+    after_ansible_ssh_pass: ansibleユーザのパスワード★
     after_ansible_become_pass: "{{ after_ansible_ssh_pass }}"
 
   tasks:
@@ -60,11 +60,14 @@
       validate: "sshd -T -f %s"
       backup: yes
 
+  - name: iptables の ssh ポート変更
+    firewalld: port={{ ssh_port }}/tcp permanent=true state=enabled immediate=yes
+
   - name: sshd サービス再起動
     service: name=sshd state=restarted
 
   - name: Ansible で接続するための ssh ポート番号変数変更
-    set_fact: ansible_ssh_port=50055
+    set_fact: ansible_ssh_port={{ ssh_port }}
 
   - name: Ansible で接続するための ssh ポート番号変数変更
     set_fact:
@@ -72,11 +75,11 @@
       ansible_ssh_pass: "{{ after_ansible_ssh_pass }}"
       ansible_become_pass: "{{ after_ansible_become_pass }}"
 
-  - name: iptables の ssh ポート変更
-    firewalld: port={{ ssh_port }}/tcp permanent=true state=enabled immediate=yes
-
   - name: オリジナル ssh ポート番号閉塞
     firewalld: service=ssh permanent=true state=disabled immediate=yes
+
+  - name: firewalld サービス再起動
+    service: name=firewalld state=restarted
 
   handlers:
     - name: sshd サービス再起動
