@@ -1,0 +1,8 @@
+[sakura_init]
+さくらVPSのIPアドレス
+
+[sakura_init:vars]
+ansible_port=22
+ansible_user=root
+ansible_ssh_pass=rootユーザのパスワード
+

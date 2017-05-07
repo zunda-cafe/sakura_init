@@ -1,0 +1,63 @@
+---
+- hosts: sakura
+  become: yes
+  remote_user: ono
+  vars:
+    users:
+      - { name: foo }
+      - { name: bar }
+      - { name: baz }
+    ssh_port: 22
+  tasks:
+  - name: ping で疎通確認
+    ping:
+
+  - name: ユーザを削除する
+    user:
+      state=absent
+      remove=yes
+      name="{{ item.name }}"
+    with_items: "{{ users }}"
+
+  - name: wheelグループからsudo権限を削除する
+    lineinfile:
+      dest: /etc/sudoers
+      regexp: "^%wheel\\s+ALL=\\(ALL\\)\\s+ALL"
+      line: "# %wheel ALL=(ALL) ALL"
+      backrefs: yes
+      validate: "visudo -cf %s"
+      backup: yes
+
+  - name: rootユーザでのssh接続を許可する
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      regexp: "^PermitRootLogin no"
+      line: "#PermitRootLogin yes"
+      backrefs: yes
+      validate: "sshd -T -f %s"
+      backup: yes
+    notify:
+      - restart sshd
+
+  - name: ssh ポート番号の復元
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      state: present
+      insertafter: "^#Port 22"
+      regexp: "^Port"
+      line: "Port {{ ssh_port }}"
+      validate: "sshd -T -f %s"
+      backup: yes
+    notify:
+      - restart sshd
+
+  - name: iptables の ssh ポート削除
+    firewalld: port={{ ssh_port }}/tcp permanent=true state=disabled immediate=yes
+
+  - name: オリジナル ssh ポート番号閉塞解除
+    firewalld: service=ssh permanent=true state=enabled immediate=yes
+
+  handlers:
+    - name: restart sshd
+      service: name=sshd state=restarted
+

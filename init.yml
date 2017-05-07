@@ -1,0 +1,83 @@
+---
+- hosts: sakura_init
+  become: yes
+  vars:
+    password: "追加ユーザのパスワード(hash化)"
+    users:
+      - { name: ansible,  password: "{{ password }}" }
+      - { name: foo,  password: "{{ password }}" }
+      - { name: bar,  password: "{{ password }}" }
+      - { name: baz,  password: "{{ password }}" }
+    ssh_port: 変更後のSSHポート番号
+    after_ansible_user: ansible
+    after_ansible_ssh_pass:ansibleユーザのパスワード 
+    after_ansible_become_pass: "{{ after_ansible_ssh_pass }}"
+
+  tasks:
+  - name: ping で疎通確認
+    ping:
+
+  - name: ユーザーを新規作成する
+    user:
+      state=present
+      name="{{ item.name }}"
+      groups=wheel
+      password="{{ item.password }}"
+    with_items: "{{ users }}"
+
+  - name: ansibleユーザにsudo権限を与える
+    lineinfile:
+      dest: /etc/sudoers
+      line: "ansible ALL=(ALL) ALL"
+      validate: "visudo -cf %s"
+      backup: yes
+
+  - name: wheelグループにsudo権限を与える
+    lineinfile:
+      dest: /etc/sudoers
+      regexp: "^# %wheel\\s+ALL=\\(ALL\\)\\s+ALL"
+      line: "%wheel ALL=(ALL) ALL"
+      backrefs: yes
+      validate: "visudo -cf %s"
+      backup: yes
+
+  - name: rootユーザーでのssh接続を禁止する
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      regexp: "^#PermitRootLogin yes"
+      line: "PermitRootLogin no"
+      backrefs: yes
+      validate: "sshd -T -f %s"
+      backup: yes
+
+  - name: ssh ポート番号の変更
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      state: present
+      insertafter: "^#Port 22"
+      regexp: "^Port"
+      line: "Port {{ ssh_port }}"
+      validate: "sshd -T -f %s"
+      backup: yes
+
+  - name: sshd サービス再起動
+    service: name=sshd state=restarted
+
+  - name: Ansible で接続するための ssh ポート番号変数変更
+    set_fact: ansible_ssh_port=50055
+
+  - name: Ansible で接続するための ssh ポート番号変数変更
+    set_fact:
+      ansible_user: "{{ after_ansible_user }}"
+      ansible_ssh_pass: "{{ after_ansible_ssh_pass }}"
+      ansible_become_pass: "{{ after_ansible_become_pass }}"
+
+  - name: iptables の ssh ポート変更
+    firewalld: port={{ ssh_port }}/tcp permanent=true state=enabled immediate=yes
+
+  - name: オリジナル ssh ポート番号閉塞
+    firewalld: service=ssh permanent=true state=disabled immediate=yes
+
+  handlers:
+    - name: sshd サービス再起動
+      service: name=sshd state=restarted

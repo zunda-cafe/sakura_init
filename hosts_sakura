@@ -1,0 +1,8 @@
+[sakura]
+さくらVPSのIPアドレス
+
+[sakura:vars]
+ansible_port=変更後のSSHポート番号
+ansible_user=ansible
+ansible_ssh_pass=ansibleユーザのパスワード
+ansible_become_pass=ansibleユーザのパスワード
