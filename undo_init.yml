@@ -1,7 +1,7 @@
 ---
 - hosts: sakura
   become: yes
-  remote_user: ono
+  remote_user: ansible
   vars:
     users:
       - { name: foo }
