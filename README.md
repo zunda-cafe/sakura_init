@@ -57,7 +57,7 @@ ansible_become_pass=ansibleユーザのパスワード★
 - hosts: sakura_init
   become: yes
   vars:
-    password: "追加ユーザのパスワード(hash化)"★
+    password: "追加ユーザのパスワード(hash化)★"
     users:
       - { name: ansible,  password: "{{ password }}" }
       - { name: foo,  password: "{{ password }}" }
@@ -75,7 +75,21 @@ ansible_become_pass=ansibleユーザのパスワード★
 
 #### undo_init.yml（戻し手順ファイル）
 
-変更なし
+````
+---
+- hosts: sakura
+  become: yes
+  remote_user: ansible
+  vars:
+    users:
+      - { name: foo }
+      - { name: bar }
+      - { name: baz }
+    ssh_port: 22
+    before_ssh_port: 変更後のSSHポート番号★
+  tasks:
+  - name: ping で疎通確認
+````
 
 ### ansible-playbook の実行 
 
