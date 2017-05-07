@@ -18,7 +18,13 @@ $ git clone https://github.com/zunda-cafe/sakura_init.git
 
 ### 資材の編集
 
-★箇所を変更
+注意点
+
+* ★箇所を変更
+* init.ymlの「パスワード(hash化)」は passwd_hash.txt に記載のコマンドを実行して取得した文字列を使用する
+* rootユーザのパスワードはさくらVPSのrootパスワードを設定する
+* 「ansibleユーザのパスワード」は任意だが、ファイル間で統一すること
+
 
 #### hosts_sakura_init（初期設定用ホスト情報）
 
@@ -66,8 +72,6 @@ ansible_become_pass=ansibleユーザのパスワード★
   - name: ping で疎通確認
 ：（中略）
 ````
-
-※ 上記「パスワード(hash化)」は passwd_hash.txt に記載のコマンドを実行して取得した文字列を使用すること。
 
 #### undo_init.yml（戻し手順ファイル）
 
