@@ -1,4 +1,4 @@
-# さくらVPS（CentOS7.2）の初期設定
+# Ansible を使用して、さくらVPS（CentOS7.2）を初期設定
 
 ## 設定項目
 
@@ -10,8 +10,20 @@
 
 ## 使用方法
 
+### Ansible資材の取得
+
+```
+$ git clone http
+```
+
 ### 初期設定
 
 ```
 $ ansible-playbook init.yml -i hosts_sakura_init
+```
+
+### 戻し
+
+```
+$ ansible-playbook undo_init.yml -i hosts_sakura
 ```
