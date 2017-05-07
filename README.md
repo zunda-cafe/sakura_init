@@ -13,8 +13,10 @@
 ### Ansible資材の取得
 
 ```
-$ git clone http
+$ git clone https://github.com/zunda-cafe/sakura_init.git
 ```
+
+### 資材の編集
 
 ### 初期設定
 
